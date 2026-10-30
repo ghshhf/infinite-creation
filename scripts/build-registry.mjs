@@ -18,6 +18,23 @@ const INDEX_FILE = path.join(ROOT, 'skills-registry.json');
 
 // 发布用的 raw 前缀：换成你自己的仓库/域名即可（任何静态托管都行）。
 const RAW_BASE = 'https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills';
+// jsDelivr 的缓存按分支缓存，发布后必须主动刷新，否则最长要等十几小时才拿到新包，
+// 而索引里的 sha256 已经是新的 —— 结果就是「校验失败」，看起来像包坏了。
+const JSD_PATH = '/gh/ghshhf/infinite-creation@main';
+
+async function purgeCdn(paths) {
+  let ok = 0;
+  for (const p of paths) {
+    try {
+      const res = await fetch('https://purge.jsdelivr.net' + p, { signal: AbortSignal.timeout(15_000) });
+      if (res.ok) ok++;
+      else console.warn('[purge] 失败 ' + res.status + '：' + p);
+    } catch (e) {
+      console.warn('[purge] 失败 ' + (e && e.message ? e.message : e) + '：' + p);
+    }
+  }
+  console.log('CDN 缓存已刷新 ' + ok + '/' + paths.length + ' 个路径');
+}
 
 // 默认只发布体积小、通用性强的技能；大包（如 6MB 的 music-caption-rewriter）留给仓库内直用。
 const DEFAULT_PUBLISH = [
@@ -31,7 +48,7 @@ const DEFAULT_PUBLISH = [
   'ai-music-studio',
 ];
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   const versionFlagIdx = args.indexOf('--version');
   const version = versionFlagIdx >= 0 ? args[versionFlagIdx + 1] : JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
@@ -77,6 +94,11 @@ function main() {
     console.log('  ' + p.name.padEnd(28) + (p.size / 1024).toFixed(1).padStart(8) + ' KB  ' + p.sha256.slice(0, 16));
   }
   console.log('\n索引已写入 ' + path.relative(ROOT, INDEX_FILE) + '（共 ' + index.skills.length + ' 项）');
+
+  // 推送到远端之后才谈得上刷新 CDN；先刷上一次推送的路径，未推送时刷了也无害。
+  if (!args.includes('--no-purge')) {
+    await purgeCdn(['/skills-registry.json', ...published.map((p) => '/dist-skills/' + p.name + '.zip')].map((p) => JSD_PATH + p));
+  }
 }
 
 function readDescription(dir) {
@@ -90,4 +112,4 @@ function readDescription(dir) {
   return '';
 }
 
-main();
+await main().catch((e) => { console.error('错误：' + (e && e.message ? e.message : e)); process.exitCode = 1; });

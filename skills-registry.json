@@ -8,7 +8,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/ai-music-studio.zip",
-          "sha256": "6cd5b4fd98765d0d17b91e92c345f7b0dba721e7f206292409eb0dfb4fa5e822",
+          "sha256": "e069ebd9dfa95edb34bbfc80abf20059a9905f6d7e8eed7004ce52018831af32",
           "size": 3278
         }
       }
@@ -20,7 +20,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/era-consistency-optimizer.zip",
-          "sha256": "b334aa63df49238396489047f38a06e160810d4efcd53860a07c9b356892bc7a",
+          "sha256": "1beb2cbcb6c6f9244636fcce92401a5c4eabc7396b37470cab79d9306074616e",
           "size": 2428
         }
       }
@@ -32,7 +32,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/image-prompt-writing.zip",
-          "sha256": "053d82e26077716c5a2703c8d3ae459c5da6558b1582417c8c12f9a917a88c78",
+          "sha256": "5447fc53060f5ac383828a75b25673e988ac204faee834f58b91c8af53d0759f",
           "size": 1865
         }
       }
@@ -44,7 +44,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/micro-drama-creator.zip",
-          "sha256": "b13abc7805408eff71ccd59743b6bba4a48310f386f76a22b40a753ec3f01e3a",
+          "sha256": "0efa90e9ddfb6401a2256573a9054842d3dd758a5e5ec81b4bce288a151353f0",
           "size": 3376
         }
       }
@@ -56,7 +56,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/novel-to-skitscreenplay.zip",
-          "sha256": "8f578a5ccf5e096bfcab1936e62892abe0661c4b631f2f697c198642077d2f29",
+          "sha256": "486bf7c24445a8a794a0216d17e9409245e14132613e372ce596ceb76f52aa49",
           "size": 5783
         }
       }
@@ -68,7 +68,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/novel-to-video.zip",
-          "sha256": "fc73c5d92b132fed7155a2b4c8c7282dcc4b6eb055a855f31c5a631acd27be5b",
+          "sha256": "2241f25bc43187b954c104899c103ad6794973c20bf24e7c552fc58cbb3500e9",
           "size": 8624
         }
       }
@@ -80,7 +80,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/script-to-storyboard.zip",
-          "sha256": "43e66ff40c6777918e81ad449a398a175603decd1b10dffa1071c8131b5c84ed",
+          "sha256": "7735b510d288309a36e1f20712ad587c3345d928aee932e30c272fa7577a5160",
           "size": 4076
         }
       }
@@ -92,7 +92,7 @@
       "versions": {
         "0.1.0": {
           "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/tts-voice-design.zip",
-          "sha256": "38efade100d919b545ba0efa0a6efaa28f48eb44ffb3a7bacb05494af325ed0b",
+          "sha256": "2f9dff6ed2b652205f22d18eaae9ef27512a3898d373ac7aed670310ada5c293",
           "size": 1603
         }
       }
