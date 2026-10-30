@@ -22,3 +22,7 @@ docs/test/
 # 技能市场：本地安装状态（每台机器不同，不入库）
 skills/.registry.json
 skills/.install-*
+# 超分工具（可执行 + 模型，几十 MB，由 scripts/fetch-upscale-tool.mjs 下载）
+bin/realesrgan/
+# 导出时的超分临时产物（中断残留也应清掉）
+_upscale-tmp/

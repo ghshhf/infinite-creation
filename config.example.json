@@ -49,6 +49,18 @@
     "agnes": {
       "baseUrl": "https://apihub.agnes-ai.com/v1",
       "apiKey": ""
+    },
+    "upscale": {
+      "enabled": false,
+      "backend": "auto",
+      "scale": 2,
+      "model": "realesr-animevideov3",
+      "sharpen": 0.8,
+      "denoise": 0,
+      "crf": 18,
+      "bin": "",
+      "extraArgs": [],
+      "maxFrames": 3600
     }
   },
   "skills": {
