@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "ai-music-studio",
+      "description": "用 AI 从一段描述或旋律生成配乐、人声与音效：风格设定、结构编排、混音与人声处理。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/ai-music-studio.zip",
+          "sha256": "9d4c6bccc27e1fac7c3bbb51847448d5a0f360a166a47866227f28a69973224a",
+          "size": 3278
+        }
+      }
+    },
+    {
+      "name": "era-consistency-optimizer",
+      "description": "年代一致性优化器：优化AIGC漫剧提示词，确保场景中出现的所有道具、科技产品、服饰、建筑、交通工具等元素与指定年代完全匹配，避免出现时代错误物体，提升生成内容的真实感与专业度。触发：明确或隐含的时代背景（如唐朝、90年代中国、维多利亚时期、近未来2045年等）。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/era-consistency-optimizer.zip",
+          "sha256": "5dd44b8c40372f9ecd9bfe9f314c711ecc6821da5822696bf029d4d28c5374cf",
+          "size": 2439
+        }
+      }
+    },
+    {
+      "name": "image-prompt-writing",
+      "description": "为 Krea2 超写实文生图（t2i）与 Qwen-Image-Edit-2511 图生图（i2i）编写中英文提示词。使用时机：为漫剧项目生成人物三视图、场景环境图、道具白底图等资产生图，或基于参考图做一致性变体。输出 prompt 与 negative_prompt。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/image-prompt-writing.zip",
+          "sha256": "e72fd1440d32800de126bd5e63336bd4e88d31494f0d30ddeffbbabad135415c",
+          "size": 1874
+        }
+      }
+    },
+    {
+      "name": "micro-drama-creator",
+      "description": "短剧与漫剧综合创作助手 — 从选题策划、剧本撰写、角色设计、分镜绘制到制作建议的全流程 AI 辅助创作工具，支持竖屏短剧、动态漫、番剧漫画等多种内容形态。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/micro-drama-creator.zip",
+          "sha256": "5bd0839cbb4bdbebca9665f59ed88534a8c415a955398166989e19f8809a0609",
+          "size": 3412
+        }
+      }
+    },
+    {
+      "name": "novel-to-skitscreenplay",
+      "description": "将长篇小说转换为符合漫剧视频规范的剧本格式。漫剧 = 电影的开头（3秒入戏）+ 电视剧的密度（每分钟3个冲突）+ 相声的节奏（不断抖包袱/反转）+ 情绪的毒品（极致的爽或虐）。触发词：小说转剧本、novel to screenplay、短剧改编、漫剧改编、剧本格式转换、把小说改成剧本、漫剧视频剧本。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/novel-to-skitscreenplay.zip",
+          "sha256": "acb6bb9cb7ab1a34677307bfee0c73ae50e8090c66a1cb71d52875130ea1b43e",
+          "size": 5826
+        }
+      }
+    },
+    {
+      "name": "novel-to-video",
+      "description": "把小说或故事全自动改编为带语音的短视频/漫剧成片。使用时机：用户提供小说原文或故事想法，要求全自动产出视频、人物形象一致、场景连续、分镜可逐段审查与重生成。覆盖：剧情改编、剧本与分镜、人物/场景/道具资产生成、MiniMax H3 Ref2VA 视频生成、成片拼接。不适用：单张图片、简单修图、无剧情的单个镜头。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/novel-to-video.zip",
+          "sha256": "9a3038c06ec000781df95ecd9b8a0b67c7a3f152c3fa8d35d8d3adc6ae69e701",
+          "size": 8624
+        }
+      }
+    },
+    {
+      "name": "script-to-storyboard",
+      "description": "将完整的剧本、故事大纲或小说片段拆解为细化到单镜的中文分镜脚本，覆盖镜头号、景别、机位运镜、画面描述、台词、音效、时长标注，并为每个镜头附可直接用于图片或视频生成的提示词。支持抖音竖屏短视频与横屏影视微电影两种形态，按剧本气质自动判断或向用户确认。当用户给出剧本/大纲/小说并要求「拆分镜」「做分镜脚本」「出分镜表」「storyboard」时使用。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/script-to-storyboard.zip",
+          "sha256": "57aeb9ac92b45c26dff9e38eece166c9be63b38e0297d5e83b9211ab16fabc78",
+          "size": 4076
+        }
+      }
+    },
+    {
+      "name": "tts-voice-design",
+      "description": "为 Qwen3-TTS 音色设计工作流编写人物音色参数。使用时机：为漫剧人物设计专属音色（音色样本 voice_ref），需给出代表性台词 text 与音色描述 voice_description。输出 text 与 voice_description。",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "url": "https://raw.githubusercontent.com/ghshhf/infinite-creation/main/dist-skills/tts-voice-design.zip",
+          "sha256": "1721ae40897709a9afa48562ffb7ebc473c6a2f016a3d45e55e2f6f00351dea5",
+          "size": 1611
+        }
+      }
+    }
+  ]
+}

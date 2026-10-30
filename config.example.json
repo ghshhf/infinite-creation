@@ -50,5 +50,8 @@
       "baseUrl": "https://apihub.agnes-ai.com/v1",
       "apiKey": ""
     }
+  },
+  "skills": {
+    "registry": ""
   }
 }

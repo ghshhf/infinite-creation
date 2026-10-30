@@ -18,6 +18,10 @@
     "install:skills": "node scripts/install-skills.mjs",
     "install:ic-writer": "node scripts/install-writer-skill.mjs",
     "install:short-drama-packs": "node scripts/install-short-drama-packs.mjs",
+    "skills:list": "node scripts/skills-market.mjs list",
+    "skills:install": "node scripts/skills-market.mjs install",
+    "skills:pack": "node scripts/skills-market.mjs pack",
+    "skills:publish": "node scripts/build-registry.mjs",
     "test": "node --test --test-force-exit \"tests/*.test.mjs\"",
     "docker:migrate": "node scripts/docker-migrate.mjs"
   },

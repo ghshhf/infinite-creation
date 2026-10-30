@@ -19,3 +19,5 @@ __pycache__/
 *.pyc
 # 测试素材（本地使用，不入库）
 docs/test/
+# 技能市场：本地安装状态（每台机器不同，不入库）
+skills/.registry.json
