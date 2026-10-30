@@ -21,3 +21,4 @@ __pycache__/
 docs/test/
 # 技能市场：本地安装状态（每台机器不同，不入库）
 skills/.registry.json
+skills/.install-*

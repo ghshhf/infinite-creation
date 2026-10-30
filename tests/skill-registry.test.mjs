@@ -7,7 +7,7 @@ import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import {
   normalizeRegistry, computeSha256, packSkill, installSkill,
-  uninstallSkill, checkUpdates, readInstalled, listInstalledSkills, REGISTRY_SCHEMA_VERSION,
+  uninstallSkill, checkUpdates, readInstalled, listInstalledSkills, REGISTRY_SCHEMA_VERSION, urlVariants,
 } from '../lib/agent/skill-registry.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -215,4 +215,12 @@ test('checkUpdates：区分 current / outdated / missing', async () => {
     server.close();
     fs.rmSync(target, { recursive: true, force: true });
   }
+});
+
+test('urlVariants：raw 与 jsDelivr gh 通道互相生成', () => {
+  const raw = 'https://raw.githubusercontent.com/o/r/main/dist-skills/a.zip';
+  const jsd = 'https://cdn.jsdelivr.net/gh/o/r@main/dist-skills/a.zip';
+  assert.deepEqual(urlVariants(raw), [raw, jsd]);
+  assert.deepEqual(urlVariants(jsd), [jsd, raw]);
+  assert.deepEqual(urlVariants('https://example.com/a.zip'), ['https://example.com/a.zip'], '非 GitHub 地址不加工');
 });
