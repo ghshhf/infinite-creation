@@ -1,14 +1,35 @@
+<div align="center">
+
 # Agent无限创作 · 把你的故事变成亿帧画面
 
+**免费开源本地 Agent 全自动视频生成 ✨，小说/剧本一键生成长视频。**<br>
+<sub>🇬🇧 English users please read <a href="README_EN.md">README in English</a></sub>
+
+<a href="https://github.com/SwotAtmk/infinite-creation/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/SwotAtmk/infinite-creation?style=for-the-badge&color=F5B700&label=stars"></a> <a href="README_EN.md"><img alt="English" src="https://img.shields.io/badge/README-English-555?style=for-the-badge"></a> <a href="https://github.com/SwotAtmk/infinite-creation/blob/main/LICENSE"><img alt="MIT" src="https://img.shields.io/badge/licence-MIT-2EA44F?style=for-the-badge"></a> <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=for-the-badge"></a>
+
+</div>
 
 ![](images/banner.jpg)
-
-
-中文 | [English](README_EN.md)
 
 ## 项目简介
 - 免费开源本地Agent全自动视频生成的开源项目✨，不用演员、配音、导演和剪辑师就能本地一键生成超长视频。可以做小说生成视频、漫剧广告、故事类讲解视频，让你所想到的故事变成亿帧画面。
 - 小说一键生成视频，不限时长，输入小说/剧本通过本地ComfyUI-MiniMaxH3+Agent+Skill技能一键全自动无限生产视频
+
+# 截图演示
+
+1. 项目首页
+   ![项目首页](images/j1.png)
+2. 章节管理
+   ![章节管理](images/j2.png)
+3. 服务配置
+   ![服务配置](images/j3.png)
+4. 素材库
+   ![素材库](images/j4.png)
+5. 分镜审查
+   ![分镜审查](images/j5.png)
+6. 导出成片
+   ![导出成片](images/j6.png)
+
 
 ## 生成样例
 - 《妈妈的时间》
@@ -19,12 +40,24 @@
 [更多样例](docs/run_demo.md)
 
 ## 项目计划
-- [✅] 支持背景音乐管理，接入 MiniMax Music3 本地/云端自动生成背景音乐并合成到视频中，含「背景音乐库」（手动生成/预览/选择/应用到章节）
+- [持续进行] 解决项目中存在的BUG
+- [计划中] 适配低显存的家用级显卡，博主的测试设备有限，需要更多的用户帮忙测试并反馈到仓库中的Issues多多反馈🙏🏻
+- [计划中] 解决并优化内部Agent存在的工具调用安全及上下文压缩等……问题
+- [计划中] 插件系统开发，支持插件上传、插件调用、插件框架……
+- [计划中] 自动流水线支持提示词自定义编排插件
 - [计划中] 收录更多高阶Skill技能，提升Agent技能视觉美感
 - [计划中] 工具Web页面美化工作，需要一个非常有美感的AI设计师
 - [计划中] 打包构建Docker部署、桌面端App
 - [计划中] 工作流接入视频超分，让生成的视频更加清晰
 - [计划中] 接入Seedance、kling、wan、MiniMax-H3在线版Api接口一键生成视频
+- [✅] 支持配置单分镜生成多个视频，根据分镜抽卡选优的模式
+- [✅] 支持互联网搜索技能，比如说生成素材支持搜索参考图片，比如说华为手机、苹果电脑等相关型号的图片用做参考图生成新的素材图片
+- [✅] 支持Agent自动根据实际应用场景调用文生视频、图生视频、首尾帧、数字人的功能（数字人模式暂为预留，不对接业务）
+- [✅] 支持上传txt文本文件，自动解析创建多章节并共享参考素材
+- [✅] 新增「场景站位一致性」Skill：为每个场景建立人物/道具站位表（空间锚点+角色方位+180度轴线），消除跨镜左右漂移与越轴等分镜一致性问题
+- [✅] 接入外部 Agent 运行时：支持本机 CLI Agent（Claude Code、Codex CLI、Gemini CLI、Qwen Code、Cursor Agent、Qoder CLI、Grok Build、Hermes、自定义命令）通过本地 MCP 工具桥接管「小说→视频」流水线，同时保留内置 openclaude 作为默认运行时
+- [✅] 支持自动生成视频字幕：项目级开关，把分镜台词/旁白按时间轴烧录进成片（自动隐藏角色名），同时保留不带字幕版本与 SRT 字幕文件供下载
+- [✅] 支持背景音乐管理，接入 MiniMax Music3 本地/云端自动生成背景音乐并合成到视频中，含「背景音乐库」（手动生成/预览/选择/应用到章节）
 - [✅] 添加Agent安全审批策略，防止Agent越权操作，删除项目或执行危险命令
 - [✅] 接入在线RunningHub-ComfyUI工作流生成，会员MiniMax-H3夜间免费运行
 - [✅] 把项目装进Skill技能，支持Agent一键调用
@@ -41,7 +74,7 @@
 提供Agent生成超长视频全链路整合方案
 
 ## 项目架构
-基于**本地 ComfyUI**（MiniMax H3 视频 GGUF 版 + Qwen-Image 2.1 文生图/图生图 + Krea2 文生图 + Qwen3-TTS + MiniMax Music3 背景音乐）的**全自动「小说/剧本 → 视频」Agent 工作流**。项目目前整理了27个Skill技能，其中包含MiniMax-H3提示词优化，分镜剧本生成，小说转剧本等。
+基于**本地 ComfyUI**（MiniMax H3 优化版 + Qwen-Image 2.1 文生图/图生图 + Krea2 文生图 + Qwen3-TTS + MiniMax Music3 背景音乐）的**全自动「小说/剧本 → 视频」Agent 工作流**。项目目前整理了35个Skill技能，其中包含MiniMax-H3提示词优化，分镜剧本生成，小说转剧本、场景站位一致性等。
 
 只要把一部小说/剧本粘贴进项目，点一下「开始」，Agent 会全自动完成：
 
@@ -56,8 +89,16 @@ CPU：12th Gen Intel(R) Core(TM) i5-12400F
 显卡：NVIDIA GeForce RTX 3080 20G 
 内存：32GB DDR4 3200 MT/s (16GBx2)
 ```
-**具体本地的显卡配置需要多大的显存，我这边暂时还没有做详细测试，如果有相关测试的结果，欢迎加入群聊分享，理论上来说8GB以上显存都是可以运行的**
 
+## **本地运行所需最低配置：**
+```text
+显卡：显卡最低需要12G+显存【有开发能力的可以自行适配8G可运行的版本】
+CPU：不挑处理器
+内存：推荐32GB以上
+硬盘：最少需要150G的空间
+```
+
+**具体本地的显卡配置需要多大的显存，我这边暂时还没有做详细测试，如果你的电脑能够正常运行此项目，欢迎加入群聊分享你的最低可运行的配置**
 **注意**：须先安装ffmpeg，否则可能会影响最后的合并成片的功能，下载地址：[https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
 
 ## 核心能力
@@ -71,34 +112,18 @@ CPU：12th Gen Intel(R) Core(TM) i5-12400F
 - **断点续跑**：任务持久化 + 幂等跳过，进程崩溃/重启后可继续，不重复生成。
 - **审查/重生成**：分镜级预览与重生成（换种子 / 按反馈改写提示词）。
 - **背景音乐**：视频阶段自动生成纯音乐背景音乐并合成到成片；另有「背景音乐库」支持手动生成（可填 caption/歌词/时长）、预览、选择，并一次性应用到多个已完成的章节。
+- **自动字幕**：项目设置可开关「自动添加字幕」，合并成片时把分镜台词/旁白按时间轴烧录进画面（自动去掉角色名），同时保留不带字幕版本与 SRT 字幕文件；「成片」页可分别下载带字幕、不带字幕视频与 SRT，并支持单个/批量删除。
 - **分阶段运行**：生成拆成 文本创作 / 资产生图 / 音色设计 / 分镜视频 四个独立阶段，可任意勾选单独跑或续跑 —— 按显存约束自动拆批，不需要的阶段不拉起对应进程。
 - **显存维护**：设置页可配「每 N 个生成后自动释放 ComfyUI 显存」（默认 3，0 = 关闭），覆盖文生图/图生图/换装/音色/视频全部渲染——AMD Dynamic VRAM 的显存累积不只在视频触发；未启用 Dynamic VRAM 时界面会提示关闭。
 - **在线预览**：成片/分镜视频经后端 Range 流式传输，进度条可随意拖动、即时跳转。
+- **外部 Agent 运行时**：除内置 openclaude 外，可在设置页切换到本机已安装的 CLI Agent（Claude Code / Codex CLI / Gemini CLI / Qwen Code / Cursor Agent / Qoder CLI / Grok Build / Hermes / 自定义命令），通过本地 MCP stdio 服务把领域工具暴露给外部 Agent、由其完整接管流水线；模型账号与登录态走各自 CLI。
 
-# 截图演示
-
-1. 项目首页
-   ![项目首页](images/j1.png)
-2. 章节管理
-   ![章节管理](images/j2.png)
-3. 服务配置
-   ![服务配置](images/j3.png)
-4. 技能管理
-   ![技能管理](images/j4.png)
-5. 资产管理
-   ![资产管理](images/j5.png)
-6. 运行日志
-   ![运行日志](images/j6.png)
-7. 分镜审查
-   ![分镜审查](images/j7.png)
-8. 导出成片
-   ![导出成片](images/j8.png)
 
 ## 技术栈
 
 - 后端：Node.js（Next.js 自定义 server）+ node:sqlite + ComfyUI REST/WebSocket + ffmpeg，零原生编译依赖。
-- Agent：自研 ReAct 循环（原生 function-calling，JSON 动作块兜底），工具注册表 + 技能引擎 + 技能工厂。
-- 前端：Next.js 15 + React 18（App Router）。
+- Agent：内置 openclaude 内核（进程内 SDK）+ 可选外部 Agent 运行时（本机 CLI 经 MCP 工具桥），工具注册表 + 技能引擎 + 技能工厂。
+- 前端：Next.js 15 + React 18（经典界面，App Router）· Studio 界面：Vite + React 18（`studio/`）。
 - 结构：单包 —— `app/`（页面 + 30+ 个 API 端点）· `lib/`（core/agent/shared 复用逻辑）· `server.js`（自定义 server：WebSocket 进度推送 + `/files` 静态托管，支持 Range 流式播放视频）。
 
 ## 目录结构
@@ -106,14 +131,17 @@ CPU：12th Gen Intel(R) Core(TM) i5-12400F
 ```
 infinite-creation/
 ├── app/                 # Next.js App Router（页面 + API 端点）
-├── lib/                 # 复用逻辑：core（ComfyUI/LLM/DB/ffmpeg）· agent（运行时+技能）· shared（常量）
+├── lib/                 # 复用逻辑：core（ComfyUI/LLM/DB/ffmpeg）· agent（内置 openclaude + 外部 Agent + 技能）· shared（常量）
+│   └── agent/external/  #   外部 Agent 运行时：defs/（每个 CLI 一个定义文件）· registry（注册表）· detect（检测）· mcp-config · mcp-server（MCP 服务）· runner（执行器）
 ├── server.js            # 自定义 server（WebSocket 进度推送 + /files 静态托管，Range 流式）
 ├── workflows/           # ComfyUI 工作流模板（MiniMax H3 视频 / Qwen-Image 2.1 图·文 / Krea2 / Qwen3-TTS，含 GGUF 量化版）
-├── start-infinite-creation.bat    # Windows 一键后台启动（自动装依赖 + 等服务就绪）
+├── start-studio.sh / start-studio.bat   # 后台启动器（Studio 前端 4710 + 独立后端 4610）
+├── start-infinite-creation.bat    # Windows 一键后台启动（经典界面 4600）
 ├── stop-infinite-creation.bat     # Windows 停止服务
 ├── skills/              # 技能库（9 官方 + novel-to-video + 自定义）
 ├── scripts/install-skills.mjs   # 拉取 MiniMax-H3 官方技能
-├── tests/unit.test.mjs          # 单元测试
+├── scripts/dev.mjs      # pnpm run dev 启动器：前台双进程实时日志；--background 后台启动
+├── tests/               # 单元测试：unit.test.mjs + external-agents.test.mjs（外部 Agent 定义 / 自定义命令 / MCP 握手）
 ├── vendor/openclaude/           # Agent 内核源码（dist/ 构建产物不入库，需本地构建）
 └── data/                # 运行时（gitignore）：SQLite + projects/<id>/…
 ```
@@ -136,10 +164,10 @@ infinite-creation/
 并且在本地部署启动这个项目。
 ```
 
-**把项目安装为Skill技能**
+**使用Agent自动安装**
 ```text
 请根据 https://gitcode.com/SwotAtmk/infinite-creation/releases/download/v1.0.0/install-skill.md，
-从 https://gitcode.com/SwotAtmk/infinite-creation 安装 infinite-creation。
+从GitHub（国外）或者GitCode（国内）上安装SwotAtmk/infinite-creation 安装 infinite-creation 技能，并根据技能描述启动这个项目。
 ```
 
 
@@ -163,39 +191,145 @@ pnpm install
 # 2. 拉取 MiniMax-H3 官方技能（可选，仓库已含离线快照）
 pnpm run install:skills
 
-# 3. 开发模式：一条命令启动（单端口 4600，前端+API+WS+静态文件全托管）
+# 3. 开发模式：默认前台启动 Studio（独立后端 4610 + 前端 4710，日志实时输出）
 pnpm run dev
+# 浏览器打开 http://127.0.0.1:4710
+# Ctrl+C 同时停止前端与后端
+
+# 需要后台常驻（日志写入文件）时
+pnpm run dev:background
+
+# 经典界面（旧版单端口 4600）开发模式
+pnpm run dev:classic
 # 浏览器打开 http://127.0.0.1:4600
 
-# 4. 生产模式：单端口 4600，由后端托管前端构建产物
+# 4. 生产模式
+# 经典界面：单端口 4600，由后端托管前端构建产物
 pnpm run build && pnpm start
 # 浏览器打开 http://127.0.0.1:4600
+
+# Studio：构建前端 + 独立后端（生产）
+./start-studio-prod.sh        # Windows：start-studio-prod.bat
+# 浏览器打开 http://127.0.0.1:4710
 ```
 
-> Windows 用户也可直接双击根目录 `start-infinite-creation.bat` 一键后台启动（自动检测端口/安装依赖/等待就绪，并提示 ComfyUI 状态），停止用 `stop-infinite-creation.bat`。
+> Windows 用户可直接双击根目录 `start-studio.bat`（Studio，后端 4610 + 前端 4710）或 `start-infinite-creation.bat`（经典界面 4600）一键后台启动；停止分别用 `stop-studio.bat` / `stop-infinite-creation.bat`。
+
+> **Studio 是默认开发界面**：`pnpm run dev` 在前台同时启动独立后端 4610 与 Studio 前端 4710，日志直接输出到终端，`Ctrl+C` 一并停止；需要后台常驻时用 `pnpm run dev:background`（内部调用 `start-studio.sh` / `start-studio.bat`）。
+> ```bash
+> pnpm run dev:background       # 后台启动，日志写入 logs/ 与 studio/logs/
+> ./start-studio.sh             # 等价的后台脚本（macOS / Linux）
+> ./stop-studio.sh              # 只停止 Studio
+> ./start-infinite-creation.sh  # 经典界面，打开 http://127.0.0.1:4600
+> ```
+> Studio 配置说明见 [studio/README.md](studio/README.md)。
 
 > Agent 内核 `vendor/openclaude/dist/` 是构建产物、不入库，`pnpm install` 会自动构建一次（幂等，已存在则跳过）。只有当你改动了 `vendor/openclaude/src/` 源码后，才需要手动重跑 `pnpm build:agent`。构建细节见 [docs/agent-architecture.md](docs/agent-architecture.md)。
+
+### 分别启动 Studio 与经典界面
+
+两套界面可以独立运行，共用同一份 `config.json` 与数据库：
+
+```bash
+# ── Studio（默认，后端 4610 + 前端 4710）────────────────
+pnpm run dev                 # 前台：日志实时输出，Ctrl+C 同时停止前后端
+pnpm run dev:background      # 后台：日志写入 logs/ 与 studio/logs/
+
+# 也可以手动分两个终端：
+# 终端 1：Studio 后端（开发）
+PORT=4610 NEXT_DIST_DIR=.next-studio-dev pnpm run dev:classic
+# 终端 2：Studio 前端
+pnpm --filter studio dev
+
+# Studio 生产
+./start-studio-prod.sh       # Windows：start-studio-prod.bat
+
+# ── 经典界面（旧版单进程，4600）────────────────────────
+pnpm run dev:classic         # 开发模式
+pnpm run build && pnpm start # 生产模式
+```
+
+Windows `cmd` 里设置环境变量：
+
+```bat
+set PORT=4610
+set NEXT_DIST_DIR=.next-studio-dev
+pnpm run dev:classic
+```
+
+> 开源版不包含账号、管理后台、积分计费与内容审核；系统设置（ComfyUI / LLM / 工作流 / 硬件 / 生成参数）直接开放。
+>
+> 若生产构建报 `EPERM ... Application Data`，是 Next 文件追踪扫描用户主目录导致；构建前临时把 HOME/USERPROFILE 指向本地目录即可（`start-studio-prod.bat` 已内置该处理）：
+> ```bash
+> HOME="$PWD/.build-home" USERPROFILE="$(cygpath -w "$PWD/.build-home")" pnpm build
+> ```
 
 ## 首次配置
 
 点右上角 ⚙ 设置：
 
 1. ComfyUI 服务地址：默认 `http://127.0.0.1:8188`，点「测试连接」确认。
-2. LLM（Agent 大脑，OpenAI 兼容）：填 Base URL（需以 `/v1` 结尾）、模型、API Key。默认使用 deepseek-v4-flash-vision-exp 模型。
-3. 生成维护（可选）：设置「每 N 个生成后释放 ComfyUI 显存」（默认开启 = 3，0 = 关闭），按**所有 ComfyUI 生成任务**计数（文生图/图生图/换装/音色/视频都计入——AMD 显卡 + Dynamic VRAM 下任意连续生成都会逐步变慢）。释放后下一个生成需重新加载模型（多花约 1~3 分钟）。检测到 ComfyUI 未启用 Dynamic VRAM 时界面会提示建议关闭。
+2. Agent 运行时（可选）：默认「内置 openclaude」；也可切换为「外部 Agent（本机 CLI）」，选择本机已安装的 CLI Agent（Claude Code / Codex CLI / Gemini CLI / Qwen Code / Cursor Agent / Qoder CLI / Grok Build / Hermes / 自定义命令），由外部 Agent 通过本地 MCP 工具桥接管流水线。
+3. LLM（Agent 大脑，OpenAI 兼容）：填 Base URL（需以 `/v1` 结尾）、模型、API Key。默认使用 deepseek-v4-flash-vision-exp 模型（内置 openclaude 使用此配置；外部 Agent 使用其自身模型与登录态）。
+4. 生成维护（可选）：设置「每 N 个生成后释放 ComfyUI 显存」（默认开启 = 3，0 = 关闭），按**所有 ComfyUI 生成任务**计数（文生图/图生图/换装/音色/视频都计入——AMD 显卡 + Dynamic VRAM 下任意连续生成都会逐步变慢）。释放后下一个生成需重新加载模型（多花约 1~3 分钟）。检测到 ComfyUI 未启用 Dynamic VRAM 时界面会提示建议关闭。
 
 配置保存在根目录 config.json（不入库）。生成参数（超时分钟、并发、释放频率）可直接编辑 config.json 的 `generation` 节。
 
+### 数据库：SQLite / PostgreSQL
+
+默认用 SQLite（`data/ic.db`），零安装、直接启动。正式部署可以换成 PostgreSQL，**两套库共用同一份表结构**，业务代码不需要改。
+
+环境变量优先（推荐）：
+
+```bash
+# 快速启动（默认）
+IC_DB=sqlite IC_DB_SQLITE_PATH=/data/ic.db
+
+# 正式部署
+IC_DB=postgres DATABASE_URL=postgres://user:pass@127.0.0.1:5432/infinite_creation
+
+# 媒体文件固定目录（Docker 挂载）
+IC_MEDIA_DIR=/data/projects
+# 配置文件也放挂载卷（否则会写进镜像层）
+IC_CONFIG=/data/config.json
+```
+
+也可以写在 `config.json` 的 `db` 节（参见 `config.example.json`），但环境变量优先。`DATABASE_URL` 存在且没有显式 `IC_DB` 时会自动选 PostgreSQL。
+
+**迁移 / 同步数据**（表结构复用同一份 `initSchema`，不会出现两套 schema 漂移）：
+
+```bash
+# SQLite → PostgreSQL
+node scripts/db-migrate.mjs --from sqlite --to postgres \
+  --to-url postgres://user:pass@127.0.0.1:5432/infinite_creation
+
+# PostgreSQL → SQLite
+node scripts/db-migrate.mjs --from postgres --to sqlite \
+  --from-url postgres://user:pass@127.0.0.1:5432/infinite_creation \
+  --to-sqlite data/ic-pg-copy.db
+
+# 先清空目标表再写入（默认按 id upsert，可重复执行）
+node scripts/db-migrate.mjs --from sqlite --to postgres --replace
+```
+
+迁移按主键 upsert，项目/素材/分镜/任务/队列/变更日志都会拷贝。媒体文件不在数据库里：图片和视频都在 `IC_MEDIA_DIR`（默认 `<data>/projects`）下，换库后继续用同一个目录或 Docker 挂载卷即可，不需要重新生成。
+
+> 说明：PostgreSQL 是通过 worker 线程提供同步门面的（现有业务层是同步 SQL）。这保证了零改造切换，但每次查询会阻塞当前进程事件循环；PostgreSQL 建议和本服务在同一台机器 / Docker 内网，不要接高延迟远程库。后续如果接远程库，可以再把 repository 改成 async。
+>
+> Docker 打包时注意保留 `lib/core/pg-worker.mjs` 和 `node_modules/pg`：PostgreSQL 驱动在 worker 线程里按文件路径加载，不会被 Next 的静态追踪自动收进去。媒体、SQLite 库、配置文件分别用 `IC_MEDIA_DIR`、`IC_DB_SQLITE_PATH`、`IC_CONFIG` 指到挂载卷即可。
+
 ### ComfyUI 所需工作流和模型
 
-在首次运行项目前，必须先安装ComfyUI工具，如果没有安装的可以先到Comfyui官网下载安装，或者使用我提供的网盘链接一键安装包进行安装（一键安装包中包含所有工作流中用到的模型和工作流），我的一键安装包目前仅支持Windows系统，Mac系统建议到官网进行手动安装，并下载模型和跑通所有示例工作流。
+在首次运行项目前，必须先安装ComfyUI工具，如果没有安装的可以先到Comfyui官网下载安装，或者使用我提供的网盘链接一键安装包进行安装（一键安装包中包含所有工作流中用到的模型和工作流），一键安装包目前仅支持Windows系统，Mac系统建议到官网进行手动安装，并下载模型和跑通所有示例工作流。
 
+**第三方服务免责声明：ComfyUI一键整合包是我花钱请第三方大佬做的，可能会包含第三方网站涉及的一些相关问题，请仔细查验以免被骗，不要相信任何加你联系方式的陌生人**
 ```txt
-我用夸克网盘给你分享了「无限创作-ComfyUI一键安装部署」，点击链接或复制整段内容，打开「夸克APP」即可获取。
+我用夸克网盘给你分享了「Windows无限创作-ComfyUI一键安装部署」，点击链接或复制整段内容，打开「夸克APP」即可获取。
 /~c2d03b8qfM~:/
 链接：https://pan.quark.cn/s/ed2afd0f6a4f?pwd=GVZe
 提取码：GVZe
 ```
+建议如果有ComfyUI相关技术的可以自行安装并补全相关插件和模型，跑通comfyui_original_workflows文件夹下的相关工作流，注意：区分英伟达NVIDIA显卡和AMD显卡的工作流
 
 在使用此Agent项目工具之前，建议你先使用ComfyUI手动跑一遍所有工作流（即：跑通comfyui_original_workflows/目录下的所有工作流）之后使用Agent项目工具就能进行全自动生成。
 
@@ -206,11 +340,9 @@ pnpm run build && pnpm start
 - 如果本地电脑配置比较低无法运行的话，可以选择使用云端算力免费试用
 
 **领取RunningHub免费云端算力试用**
-```text
-打开链接：[https://www.runninghub.cn?inviteCode=6to0etcb](https://www.runninghub.cn?inviteCode=6to0etcb) 
-现在注册还能领500RH币，可以免费生成不少图片和视频哦！
-```
-- 浏览器打开 [https://www.runninghub.cn/call-api/bill-task?tab=keys&type=consumer](https://www.runninghub.cn/call-api/bill-task?tab=keys&type=consumer) 获取RunningHub Api-Key
+> 打开链接：https://www.runninghub.cn?inviteCode=6to0etcb 现在注册还能领500RH币，可以免费生成不少图片和视频哦！
+
+- 浏览器打开 [https://www.runninghub.cn/call-api/bill-task?tab=keys&type=consumer](https://www.runninghub.cn/call-api/bill-task?tab=keys&type=consumer&inviteCode=6to0etcb) 获取RunningHub Api-Key
 ![r2.png](images/r2.png)
 
 - 配置RunningHub Api-Key
@@ -223,7 +355,7 @@ pnpm run build && pnpm start
 1. 新建项目 → 粘贴小说原文（或一句话想法）+ 风格。
 2. 在「章节管理」页点某章的「操作」，勾选要跑的阶段（文本创作 / 资产生图 / 音色设计 / 分镜视频，可只勾一部分用于续跑），点 ▶ 开始 → 控制台实时看进度（无需任何中途操作）。
 3. 视频阶段跑完自动生成背景音乐并合并成片；到「分镜审查」逐段预览，对不满意的镜头点 ↻ 重新生成（可填反馈）；「背景音乐」页可手动生成/预览/选择背景音乐并应用到多个章节。
-4. 到「成片」页在线预览（进度条可拖动）并 ⬇ 下载。
+4. 到「成片」页在线预览（进度条可拖动），按需下载带字幕 / 不带字幕视频或 SRT 字幕文件；不再需要的成片可单个删除或勾选批量删除。
 
 ## 自迭代：新工作流 → 新技能
 
@@ -239,15 +371,67 @@ pnpm run build && pnpm start
 | GET      | /api/projects/:id/assets?category=      | 资产（分类）          |
 | GET      | /api/projects/:id/shots                 | 分镜              |
 | POST     | /api/projects/:id/shots/:sid/regenerate | 单分镜重生成          |
-| POST     | /api/projects/:id/export                | 合并导出成片          |
+| POST     | /api/projects/:id/export                | 合并导出成片（按项目开关烧录字幕，并生成无字幕副本与 SRT） |
+| GET/DELETE | /api/projects/:id/exports             | 成片列表 / 删除成片（支持批量，连带清理无字幕副本与 SRT） |
 | GET      | /api/projects/:id/stages                | 各阶段待办数 + 阶段定义  |
 | POST     | /api/projects/:id/stages                | 分阶段运行（勾选 llm/image/tts/video 起一批，含预检） |
 | POST     | /api/projects/:id/music                 | 生成背景音乐（新建 / 编辑后重新生成一条音乐资产） |
 | POST     | /api/projects/:id/music/apply           | 把背景音乐应用到多个章节并重新合成成片 |
+| GET/PUT  | /api/projects/:id/context               | 上下文：人物圣经 / 风格 / 连续性（同时落盘 context/*.md） |
+| PUT      | /api/projects/:id/chapters/:cid/storyboard | 整章批量写分镜（单次 ≤500 条） |
+| POST/DELETE | /api/projects/:id/shots              | 新建 / 删除单个分镜     |
+| PATCH    | /api/projects/:id/shots/:sid            | 改单个分镜正文（生成结果字段不可写） |
+| GET      | /api/projects/:id/logs                  | 变更日志：谁在什么时候改了什么（回滚依据） |
+| POST     | /api/projects/:id/logs/rollback         | 回滚：单条 / 整批 / 按时间点 |
 | GET      | /api/skills                             | 技能列表            |
 | GET/POST | /api/workflows                          | 工作流列表 / 注册（自迭代） |
 | GET/PUT  | /api/config                             | 配置              |
 | WS       | /ws                                     | 任务进度推送          |
+
+## 让 Claude Code / opencode 帮你写内容（外部写入）
+
+除了在界面里点，你也可以让本机的 AI 编程工具（Claude Code、opencode、Codex、Trae 等）直接把**文字内容**写进正在运行的项目：新建项目、写小说原文、写剧本、写分镜、写人物圣经/风格。典型场景是「手里已经有一部长篇小说，想批量导入并拆成章节」。
+
+它**只写文字**：不会帮你生图、生视频、配音、配乐、导出成片——那些仍然在界面里点。
+
+### 三步用起来
+
+```bash
+# 1. 装技能（只需一次；装完重启一下 AI 工具，它才会发现新技能）
+pnpm run install:ic-writer     # 默认装到 ~/.agents/skills/ic-writer/
+
+# 2. 起服务（默认启动 Studio：界面 http://127.0.0.1:4710，API 4610）
+pnpm run dev
+
+# 3. 对 AI 工具说人话，例如：
+#    「把这本小说写进 infinite-creation，一章一段」
+#    「给这个项目写 3 章剧本」
+#    「把第 2 章的分镜表重写一遍」
+```
+
+> 写作技能默认连接 `http://127.0.0.1:4600`（经典界面后端）；使用 Studio 时把它指向 Studio 后端即可：`IC_BASE_URL=http://127.0.0.1:4610`。
+
+技能源就在仓库里：`harness-skills/ic-writer/SKILL.md`（`pnpm run install:ic-writer` 就是把它复制到技能目录）。想装到别处：`node scripts/install-writer-skill.mjs --target <你的技能目录>`。
+
+### 能写什么、不能写什么
+
+|  |  |
+|---|---|
+| ✅ 能写 | 项目属性、小说原文、剧本、分镜（台词/画面/镜头/时长等）、人物圣经/风格/连续性、素材提示词；**已经生成过的**这些内容也能改写覆盖 |
+| ❌ 不能写 | `status`、`video_path` 这类「生成结果」字段——写不进去，也伪造不出「已生成」 |
+| ❌ 不会碰 | 生图 / 生视频 / 配音 / 配乐 / 导出成片（`/run`、`/stages`、`/regenerate`、`/music`、`/export`） |
+| ❌ 没有 | 删除项目的接口（永远不提供） |
+
+### 限制与注意
+
+- **只对本机用**：技能默认只连 `127.0.0.1:4600`（Studio 后端为 `4610`，可用 `IC_BASE_URL` 指定）。这个实例**没有鉴权**——如果把 `config.json` 里的 `server.host` 改成 `0.0.0.0`，等于给局域网开了一个「能读全文、能改内容、能回滚」的入口，别这么配。
+- **项目正在跑任务时先别写**：`GET /api/projects/:id` 的 `status` 是 `running` 就等它跑完（删除类写入会被直接拒 409；内容类写入也可能被任务用旧数据覆盖，最后成片和分镜表对不上）。
+- **写进去的分镜要过业务校验**，否则接口直接 400：时长 1~15 秒；台词字数 ≤ 时长 × 5.5（超了会被压成听不清的模糊声）；单个分镜说话人 ≤ 2；分辨率 / 宽高比走固定枚举。
+- **只走 HTTP API**：读写一律通过 `{base}/api/...`。不要直连 `data/ic.db`（只读也不行）、不要手改 `data/` 里的文件和 `config.json`——绕过去就没有变更日志，写错了回滚不了。
+- **每一步都能回滚**：一次调用就是一个批次，可以单条、整批（`batch_id`）或按时间点回滚；回滚只恢复数据库里的内容，磁盘上的图片/视频文件不会跟着删（要重传）。
+- **换机器照样用**：上面的命令都不依赖具体目录，在项目根目录执行即可；技能默认装到用户主目录 `~/.agents/skills/`。
+
+细节见仓库根 [SKILL.md](SKILL.md) 第六节（给 Agent 的完整契约）与 [docs/writer-api-plan.md](docs/writer-api-plan.md)（设计取舍与逐轮记录）。
 
 ## 测试
 
@@ -278,6 +462,7 @@ pnpm test   # node --test tests/unit.test.mjs
 - [OpenClaude：https://github.com/Gitlawb/openclaude](https://github.com/Gitlawb/openclaude) 提供了 Agent 内核和工作流管理功能
 - [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) 提供了 ComfyUI 工作流和模型架构
 - [deepseek](https://www.deepseek.com/) 感谢Deepseek提供了 deepseek-v4-flash-vision-exp 模型
+- 参考开源Skill技能：[short-drama](https://github.com/0xsline/short-drama)、[manju-laoli-skill](https://github.com/lixiaoxiao9888-create/manju-laoli-skill)
 
 感谢这些项目为我提供了帮助，使项目能够快速迭代和改进。
 
@@ -285,9 +470,9 @@ pnpm test   # node --test tests/unit.test.mjs
 本项目由个人开发者独立完成，欢迎各位同行多提提意见，多找找bug帮忙多多宣传，做出更好的产品让更多的人发现。项目刚开源里面可能会有很多地方需要调整优化的地方，欢迎各位提交issues或者在我的基础上做更多的优化，感谢每一位对这个项目做出贡献的人。
 
 ## 致谢
+- 感谢开发者[taoxiangyoushu](https://github.com/taoxiangyoushu)为此项目做出的贡献，接入了图生视频+首尾帧的工作流模式并修复了部分bug
 - 感谢开发者 [happymy](https://github.com/happymy) 为此项目提供了AMD+GGUF适配的解决方案以及解决项目中存在的部分bug
-- 感谢开发者 [binonxia](https://github.com/binonxia) 发现并修复了项目中的bug
-
+- 感谢以下开发者为项目做出的贡献：[thrasher824](https://github.com/thrasher824)、[remiliakui](https://github.com/remiliakui)、[ghshhf](https://github.com/ghshhf)、[binonxia](https://github.com/binonxia)、[anupamme](https://github.com/anupamme)
 
 ## Star 历史
 

@@ -7,22 +7,25 @@ import LoadingOverlay from './LoadingOverlay';
 
 // ============ 章节操作面板（「操作」弹窗内容） ============
 // 针对单个章节的生成/重生成/分阶段运行，替代原「生成内容」整页，重排版适配弹窗
-export default function ChapterOps({ projectId, chapter, running, onRun, onStop, onRefresh, onGoLogs }) {
+export default function ChapterOps({ projectId, chapter, running, runningChapter, onRun, onStop, onRefresh, onGoLogs }) {
   const toast = useToast();
   // 分阶段运行：待办数由后端算（不启 LLM），勾选后单独起一批
   const [stageList, setStageList] = useState(null);
   const [pending, setPending] = useState({});
   const [picked, setPicked] = useState(() => new Set());
   const [stageErr, setStageErr] = useState('');
+  const [stageLoadErr, setStageLoadErr] = useState('');
   // 提交类操作进行中：显示全屏加载层提示等待并阻断重复点击，操作结束（成功或失败）后自动消失
   const [busy, setBusy] = useState(null);
 
   // 待办数刷新：进入/离开运行态 + 运行期间每 4s 拉一次。
   useEffect(() => {
     let alive = true;
+    // 拉取失败必须让用户看见：stageList 保持 null、一直显示「分阶段运行加载中…」，
+    // 用户只会以为界面卡住（项目被删、实例重启都会命中），而错误其实可以照原样说明。
     const load = () => api.get('/api/projects/' + projectId + '/stages')
-      .then((d) => { if (alive) { setStageList(d.stages); setPending(d.pending || {}); } })
-      .catch(() => {});
+      .then((d) => { if (alive) { setStageList(d.stages); setPending(d.pending || {}); setStageLoadErr(''); } })
+      .catch((e) => { if (alive) setStageLoadErr('分阶段运行加载失败：' + ((e && e.message) || e)); });
     load();
     if (!running) return () => { alive = false; };
     const t = setInterval(load, 4000);
@@ -88,9 +91,9 @@ export default function ChapterOps({ projectId, chapter, running, onRun, onStop,
   return (
     <div className="flex flex-col gap-3">
       <div className="row">
-        {running
+        {runningChapter === chapter?.title
           ? <Button size="sm" color="danger" onPress={stopRun}>■ 停止</Button>
-          : <Button size="sm" color="success" isDisabled={!chapter} onPress={startRun}>▶ 生成/继续 {chapter ? chapter.title : ''}</Button>}
+          : <Button size="sm" color="success" isDisabled={!chapter || running} onPress={startRun}>▶ 生成/继续 {chapter ? chapter.title : ''}</Button>}
         {!running && <Button size="sm" variant="flat" isDisabled={!chapter} onPress={() => regenChapter('storyboard')}>↻ 重新生成本章分镜</Button>}
         {!running && <Button size="sm" variant="flat" isDisabled={!chapter} onPress={() => regenChapter('videos')}>↻ 重新生成本章视频</Button>}
       </div>
@@ -101,10 +104,14 @@ export default function ChapterOps({ projectId, chapter, running, onRun, onStop,
       </p>
 
       {stageList === null ? (
-        <div className="border-t border-default-200 pt-3 flex items-center justify-center gap-2.5 py-6">
-          <Spinner size="sm" />
-          <span className="muted">分阶段运行加载中…</span>
-        </div>
+        stageLoadErr
+          ? <p className="m-0 text-danger">{stageLoadErr}</p>
+          : (
+            <div className="border-t border-default-200 pt-3 flex items-center justify-center gap-2.5 py-6">
+              <Spinner size="sm" />
+              <span className="muted">分阶段运行加载中…</span>
+            </div>
+          )
       ) : (
         <div className="border-t border-default-200 pt-3 flex flex-col gap-2">
           <div className="flex flex-col gap-2">

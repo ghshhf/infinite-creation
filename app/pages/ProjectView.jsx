@@ -15,7 +15,7 @@ import EditProject from './EditProject';
 // 任务类型 → 中文名（任务列表显示用）
 const JOB_LABEL = { create: '生成流水线', regenerate: '重生成分镜', 'asset-image': '资产出图', 'voice-design': '音色设计', costume: '换装', age: '年龄变体', stage: '阶段运行', 'chapter-video': '章节视频重生成', llm: '素材命名（LLM）', export: '导出成片', music: '生成背景音乐', 'music-apply': '应用背景音乐' };
 // 可取消的任务类型（走队列/闸门，能被打断）；llm/export 是请求内同步任务，无取消入口
-const CANCELLABLE = new Set(['create', 'regenerate', 'asset-image', 'voice-design', 'costume', 'age', 'stage', 'chapter-video']);
+const CANCELLABLE = new Set(['create', 'regenerate', 'asset-image', 'voice-design', 'costume', 'age', 'stage', 'chapter-video', 'music', 'music-apply']);
 // 任务状态 → 标签与颜色
 const JOB_STATUS = {
   running: { label: '执行中', color: 'primary' },
@@ -42,13 +42,28 @@ function fmtDuration(a, b) {
   return m + ' 分' + (r ? r + ' 秒' : '');
 }
 
+// 「分镜审查」默认定位的章节：优先「生成中」；没有则定位到最后一个「生成完成」的章节；
+// 都没有（全空/待生成/失败）再退回最后一章。章节按 seq 排序，生成按章推进，这样默认看到的是
+// 最近正在跑或最近跑完的那一章，而不是列表末尾那个还没生成的新章节。
+function defaultShotCursor(list) {
+  if (!list.length) return '';
+  const running = list.find((c) => c.genStatus === 'running');
+  if (running) return running.id;
+  let lastDone = '';
+  for (const c of list) if (c.genStatus === 'done') lastDone = c.id;
+  if (lastDone) return lastDone;
+  return list[list.length - 1].id;
+}
+
 // ============ 项目工作区 ============
 export default function ProjectView({ id, onBack, initialTab = 'chapters', onTabChange }) {
   const toast = useToast();
   const [project, setProject] = useState(null);
   const [pview, setPview] = useState(initialTab === 'generate' ? 'chapters' : initialTab);
   // tab 切换同步到 URL（page.jsx replaceState 更新，刷新后停留原 tab）
-  const setTab = (t) => { setPview(t); if (onTabChange) onTabChange(t); };
+  // 进入「分镜审查」时定位到「生成中 / 最后一个生成完成」的章节（defaultShotCursor），
+  // 而不是列表末尾那个可能还没生成的新章节。按章节 id 记（见下面 cursorId），不用下标哨兵值。
+  const setTab = (t) => { if (t === 'shots') setCursorId(defaultShotCursor(chapters)); setPview(t); if (onTabChange) onTabChange(t); };
   const [events, setEvents] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [editOpen, setEditOpen] = useState(false);
@@ -61,11 +76,31 @@ export default function ProjectView({ id, onBack, initialTab = 'chapters', onTab
   // 已被用户删除的任务 id：其运行器的终态 WS 事件不再弹通知（任务记录已删）
   const removedJobIdsRef = useRef(new Set());
   const [chapters, setChapters] = useState([]);
-  const [cursor, setCursor] = useState(0);
+  // 分镜页的「当前章节」按 **章节 id** 记，不记下标：章节可拖拽排序/删除/新增，
+  // 存下标时排序一次就会让用户看着 A 章的名字、实际渲染 B 章的分镜（下标还指向旧位置）。
+  const [cursorId, setCursorId] = useState('');
+  // 项目加载失败（id 不存在 / 项目被别的标签页删掉）：此前没有 catch，Promise.all 的拒绝无人处理，
+  // 界面永远停在「项目加载中…」，连「返回」按钮都没有。
+  const [loadError, setLoadError] = useState('');
+  // 在途请求序号：WS 每条消息、2.5s 轮询、初始加载会同时在飞，先发后到的旧响应会把新状态盖回去
+  // （典型现象：任务已 done，界面又被旧响应改回 running）。
+  const loadSeqRef = useRef(0);
 
   const loadProject = useCallback(async () => {
-    const [p, j, c] = await Promise.all([api.get('/api/projects/' + id), api.get('/api/projects/' + id + '/jobs'), api.get('/api/projects/' + id + '/chapters')]);
-    setProject(p); setJobs(j); setChapters(c); setCursor((x) => (x < 0 ? 0 : Math.min(x, Math.max(c.length - 1, 0))));
+    const seq = ++loadSeqRef.current;
+    let p, j, c;
+    try {
+      [p, j, c] = await Promise.all([api.get('/api/projects/' + id), api.get('/api/projects/' + id + '/jobs'), api.get('/api/projects/' + id + '/chapters')]);
+    } catch (e) {
+      if (seq === loadSeqRef.current) setLoadError(e.message || '加载失败');
+      return;
+    }
+    if (seq !== loadSeqRef.current) return; // 有更新的请求在飞，丢弃本次（旧）结果
+    setLoadError('');
+    setProject(p); setJobs(j); setChapters(c);
+    // 章节 id 仍存在就保持选中（排序/改名都不影响），否则退回默认定位章节
+    // （与「进入分镜审查默认看生成中/最后一个完成章节」保持一致）
+    setCursorId((x) => (c.some((ch) => ch.id === x) ? x : defaultShotCursor(c)));
     // 出现新任务就把任务列表展开，让用户提交后立刻看到（无论它瞬间完成/失败）
     if (firstJobsLoadRef.current) firstJobsLoadRef.current = false;
     else if (j.some((x) => !seenJobIdsRef.current.has(x.id))) setQueueOpen(true);
@@ -123,7 +158,14 @@ export default function ProjectView({ id, onBack, initialTab = 'chapters', onTab
 
   useEffect(() => { loadProject(); }, [loadProject]);
 
-  async function run(chapter) { try { await api.post('/api/projects/' + id + '/run', chapter ? { chapter } : {}); setEvents([]); loadProject(); } catch (e) { toast.error(e.message); } }
+  // 提交生成：失败时把错误**抛给调用方**，不再自己吞掉。此前这里 catch 后只弹一次错误，
+  // 调用方（ChapterOps 的「生成/继续」、ChaptersView 的「生成」）拿不到失败信号，
+  // 于是紧接着又弹一条「已提交…生成」——用户看到自相矛盾的两条提示，还以为真的跑起来了。
+  async function run(chapter) {
+    await api.post('/api/projects/' + id + '/run', chapter ? { chapter } : {});
+    setEvents([]);
+    loadProject();
+  }
   async function stop() { try { await api.post('/api/projects/' + id + '/stop'); loadProject(); } catch (e) { toast.error(e.message); } }
   async function cancelJob(jid) { try { await api.post('/api/projects/' + id + '/jobs/' + jid + '/cancel'); loadProject(); } catch (e) { toast.error(e.message); } }
   // 删除任务记录（活动任务由后端先取消再删记录；不删素材/成片）
@@ -142,6 +184,8 @@ export default function ProjectView({ id, onBack, initialTab = 'chapters', onTab
   const runningCount = activeJobs.filter((j) => j.status === 'running').length;
   const queuedCount = activeJobs.filter((j) => j.status === 'queued').length;
   const finishedJobs = jobs.filter((j) => j.status !== 'running' && j.status !== 'queued');
+  // 当前「正在生成」的章节：取正在运行任务中带 checkpoint.chapter 的那一个
+  const runningChapter = (jobs.find((j) => j.status === 'running' && j.checkpoint && j.checkpoint.chapter) || {}).checkpoint?.chapter || null;
   // 任务列表：活动任务置顶（执行中 → 排队中；排队按提交先后即队列顺序），其后是最近的已结束任务
   const shownJobs = [
     ...activeJobs.sort((a, b) => ((a.status === 'running' ? 0 : 1) - (b.status === 'running' ? 0 : 1)) || ((a.startedAt || 0) - (b.startedAt || 0))),
@@ -159,8 +203,17 @@ export default function ProjectView({ id, onBack, initialTab = 'chapters', onTab
     return (
       <Card>
         <CardBody className="flex-row items-center justify-center gap-2.5 py-10">
-          <Spinner size="sm" />
-          <span className="muted">项目加载中…</span>
+          {loadError ? (
+            <>
+              <span className="muted">项目加载失败：{loadError}</span>
+              <Button size="sm" variant="flat" onPress={onBack}>← 返回列表</Button>
+            </>
+          ) : (
+            <>
+              <Spinner size="sm" />
+              <span className="muted">项目加载中…</span>
+            </>
+          )}
         </CardBody>
       </Card>
     );
@@ -221,7 +274,10 @@ export default function ProjectView({ id, onBack, initialTab = 'chapters', onTab
                       </div>
                       <div className="row" style={{ gap: 4, flexShrink: 0 }}>
                         {isActive && CANCELLABLE.has(j.type) && <Button size="sm" variant="light" onPress={() => cancelJob(j.id)}>取消</Button>}
-                        <Button size="sm" variant="light" color="danger" onPress={() => removeJob(j.id)}>删除</Button>
+                        {/* 行内任务（llm 参考图分析 / export 按章导出）在请求内同步执行：后端 DELETE 明确回
+                            409（停不掉，删了记录只会留下看不见的孤儿）。这里就不渲染「删除」按钮，
+                            别给用户一个必然报错的入口。 */}
+                        {!(j.status === 'running' && !CANCELLABLE.has(j.type)) && <Button size="sm" variant="light" color="danger" onPress={() => removeJob(j.id)}>删除</Button>}
                       </div>
                     </div>
                   );
@@ -245,17 +301,17 @@ export default function ProjectView({ id, onBack, initialTab = 'chapters', onTab
       </Tabs>
 
       <div>
-        {pview === 'chapters' && <ChaptersView projectId={id} chapters={chapters} onRefresh={loadProject} running={running} onRun={run} onStop={stop} onGoLogs={() => setTab('logs')} />}
+        {pview === 'chapters' && <ChaptersView projectId={id} chapters={chapters} onRefresh={loadProject} running={running} runningChapter={runningChapter} onRun={run} onStop={stop} onGoLogs={() => setTab('logs')} />}
         {pview === 'assets' && <AssetsTab projectId={id} jobs={jobs} onRefresh={loadProject} />}
         {pview === 'shots' && (
           <div className="flex flex-col gap-3">
             <div className="row" style={{ gap: 8, alignItems: 'center' }}>
               <span className="muted">章节</span>
-              <Select size="sm" className="w-52" aria-label="选择章节" selectedKeys={selectKeys(String(cursor))} onSelectionChange={(k) => setCursor(Number(pickKey(k)) || 0)}>
-                {chapters.map((c, i) => <SelectItem key={String(i)}>{c.title}</SelectItem>)}
+              <Select size="sm" className="w-52" aria-label="选择章节" selectedKeys={selectKeys(cursorId)} onSelectionChange={(k) => setCursorId(pickKey(k))}>
+                {chapters.map((c) => <SelectItem key={c.id}>{c.title}</SelectItem>)}
               </Select>
             </div>
-            <ShotsTab projectId={id} chapter={chapters[cursor]?.title || ''} running={running} jobs={jobs} onRefresh={loadProject} />
+            <ShotsTab projectId={id} chapter={chapters.find((c) => c.id === cursorId)?.title || ''} running={running} jobs={jobs} onRefresh={loadProject} />
           </div>
         )}
         {pview === 'music' && <MusicTab projectId={id} chapters={chapters} running={running} onRefresh={loadProject} />}

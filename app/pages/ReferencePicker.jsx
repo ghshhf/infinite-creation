@@ -1,7 +1,17 @@
 'use client';
 import { useRef, useState } from 'react';
-import { Card, CardBody, Button, Input, Select, SelectItem, Modal, ModalContent, ModalBody, ModalFooter } from '@heroui/react';
-import { CATEGORIES, fileUrl, selectKeys, pickKey } from './shared';
+import { Card, CardBody, Button, Input, Select, SelectItem, Modal, ModalContent, ModalBody, ModalFooter, Spinner } from '@heroui/react';
+import { fileUrl, selectKeys, pickKey } from './shared';
+import { REFERENCE_IMAGE_EXTS, REFERENCE_IMAGE_MAX_BYTES, isReferenceImageName, isVariantAssetCategory, ASSET_CATEGORIES, ASSET_CATEGORY_LABEL } from '../../lib/shared/index.js';
+import { useToast } from '../toast';
+
+// 参考图上传/编辑里能选的素材分类：服装/年龄是「挂在角色下的变体」，必须有父角色，
+// 而这条链路没有「所属角色」可填 —— 后端会 400（见 references 路由），所以这里也不给选项。
+// 存量里已经是这种分类的行仍要能显示出来，否则下拉会空白（故传入当前值兜底）。
+const LIB_CATEGORIES = ASSET_CATEGORIES.filter((c) => !isVariantAssetCategory(c.id)).map((c) => [c.id, c.label]);
+function libCategoryOptions(cur) {
+  return isVariantAssetCategory(cur) ? [[cur, ASSET_CATEGORY_LABEL[cur] || cur], ...LIB_CATEGORIES] : LIB_CATEGORIES;
+}
 
 // ============ 参考图片素材列表（统一：已上传素材 + 待上传本地文件） ============
 // items: 待上传的本地文件 [{ key, file, mode: 'reference'|'library', category, description, previewUrl }]
@@ -12,16 +22,52 @@ import { CATEGORIES, fileUrl, selectKeys, pickKey } from './shared';
 let seq = 0;
 function nextKey() { seq += 1; return 'ref_' + Date.now() + '_' + seq; }
 
+// 缩略图：从服务器加载时显示转圈动画，加载失败回退成「图」占位，避免图片出现前一片空白
+function ThumbImg({ src, alt, onClick, title }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return <div className="w-12 h-12 flex items-center justify-center rounded bg-default-100 text-muted shrink-0">图</div>;
+  }
+  return (
+    <div className="relative w-12 h-12 rounded overflow-hidden bg-default-100 shrink-0">
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Spinner size="sm" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onClick={onClick}
+        title={title}
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+        className={'w-12 h-12 object-cover rounded cursor-zoom-in' + (loaded ? '' : ' opacity-0')}
+      />
+    </div>
+  );
+}
+
 export default function ReferencePicker({ projectId, items, onChange, saved = [], onUpdateSaved, onDeleteSaved, allowAdd = true }) {
+  const toast = useToast();
   const fileRef = useRef(null);
   const [preview, setPreview] = useState(null); // { url, name } 点击放大预览
 
   function addFiles(fileList) {
     const next = [];
+    const badExt = [];
+    const tooBig = [];
     for (const file of fileList || []) {
-      if (!file.type || !file.type.startsWith('image/')) continue;
-      next.push({ key: nextKey(), file, mode: 'reference', category: 'other', description: '', previewUrl: URL.createObjectURL(file) });
+      // 白名单与后端同一份（lib/shared）：只看扩展名，不看 file.type ——
+      // 有些来源的 png 没有 MIME type，按 type 过滤会把它们静默丢掉；
+      // 而 image/bmp、image/avif 之类又会被放行、上传后才 400。
+      if (!isReferenceImageName(file.name)) { badExt.push(file.name); continue; }
+      if (file.size > REFERENCE_IMAGE_MAX_BYTES) { tooBig.push(file.name); continue; }
+      next.push({ key: nextKey(), file, mode: 'library', category: 'prop', description: '', previewUrl: URL.createObjectURL(file) });
     }
+    if (badExt.length) toast.error('已跳过非支持格式：' + badExt.join('、') + '（仅支持 ' + REFERENCE_IMAGE_EXTS.map((e) => e.slice(1)).join('/') + '）');
+    if (tooBig.length) toast.error('已跳过超过 10MB 的文件：' + tooBig.join('、'));
     if (next.length) onChange([...(items || []), ...next]);
   }
 
@@ -52,7 +98,7 @@ export default function ReferencePicker({ projectId, items, onChange, saved = []
               ref={fileRef}
               type="file"
               multiple
-              accept="image/*"
+              accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif"
               style={{ display: 'none' }}
               onChange={(e) => { addFiles(e.target.files || []); e.target.value = ''; }}
             />
@@ -63,7 +109,7 @@ export default function ReferencePicker({ projectId, items, onChange, saved = []
                 <div key={'saved_' + r.id} className="border border-default-200 rounded-md p-2">
                   <div className="row" style={{ gap: 10, alignItems: 'center' }}>
                     {r.image_path
-                      ? <img src={fileUrl(projectId, r.image_path)} alt="" onClick={() => setPreview({ url: fileUrl(projectId, r.image_path), name: r.name })} className="w-12 h-12 object-cover rounded cursor-zoom-in" title="点击放大" />
+                      ? <ThumbImg src={fileUrl(projectId, r.image_path)} alt="" onClick={() => setPreview({ url: fileUrl(projectId, r.image_path), name: r.name })} title="点击放大" />
                       : <div className="thumb w-12 h-12 flex items-center justify-center rounded" style={{ aspectRatio: '1 / 1' }}>图</div>}
                     <span style={{ flex: 1, wordBreak: 'break-all' }}>{r.name || '未命名'}</span>
                     <Select size="sm" className="w-40 min-w-0" aria-label="素材用途" selectedKeys={selectKeys(r.mode)} onSelectionChange={(k) => onUpdateSaved && onUpdateSaved(r.id, { mode: pickKey(k) })}>
@@ -72,7 +118,7 @@ export default function ReferencePicker({ projectId, items, onChange, saved = []
                     </Select>
                     {r.mode === 'library' && (
                       <Select size="sm" className="w-28 min-w-0" aria-label="素材分类" selectedKeys={selectKeys(r.category)} onSelectionChange={(k) => onUpdateSaved && onUpdateSaved(r.id, { category: pickKey(k) })}>
-                        {CATEGORIES.map(([k, l]) => <SelectItem key={k}>{l}</SelectItem>)}
+                        {libCategoryOptions(r.category).map(([k, l]) => <SelectItem key={k}>{l}</SelectItem>)}
                       </Select>
                     )}
                     {onDeleteSaved && <Button size="sm" variant="flat" color="danger" onPress={() => onDeleteSaved(r.id)}>删除</Button>}
@@ -97,7 +143,7 @@ export default function ReferencePicker({ projectId, items, onChange, saved = []
                     </Select>
                     {it.mode === 'library' && (
                       <Select size="sm" className="w-28 min-w-0" aria-label="素材分类" selectedKeys={selectKeys(it.category)} onSelectionChange={(k) => patch(it.key, { category: pickKey(k) })}>
-                        {CATEGORIES.map(([k, l]) => <SelectItem key={k}>{l}</SelectItem>)}
+                        {libCategoryOptions(it.category).map(([k, l]) => <SelectItem key={k}>{l}</SelectItem>)}
                       </Select>
                     )}
                     <Button size="sm" variant="flat" onPress={() => remove(it.key)}>移除</Button>

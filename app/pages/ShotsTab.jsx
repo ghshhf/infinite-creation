@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Button, Input, Card, CardBody, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Spinner } from '@heroui/react';
 import { api } from '../api-client.js';
 import { fileUrl, dialogueSpeakers, statusColor } from './shared';
+import { nameMatches } from '../../lib/shared/index.js';
 import { useToast } from '../toast';
 import ShotMaterialPicker from './ShotMaterialPicker';
 import LoadingOverlay from './LoadingOverlay';
@@ -22,6 +23,10 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
   const [ask, setAsk] = useState(null);
   const [loading, setLoading] = useState(true);
   const [materialPicker, setMaterialPicker] = useState(null);
+  // 正在编辑视频提示词的分镜：{ shotId, value }；null 表示未进入编辑态
+  const [editPrompt, setEditPrompt] = useState(null);
+  // 正在编辑时长的分镜：{ shotId, value }；null 表示未进入编辑态
+  const [editDuration, setEditDuration] = useState(null);
   // 导出/打包等耗时操作进行中：显示全屏加载层提示等待并阻断重复点击，操作结束后自动消失
   const [busy, setBusy] = useState(null);
   const load = useCallback(() => {
@@ -52,6 +57,9 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
   const costumesOf = (s) => asArr(s.costume_ids).map(byId).filter(Boolean);
   const agesOf = (s) => asArr(s.age_ids).map(byId).filter(Boolean);
   const audiosOf = (s) => asArr(s.audio_ids).map(byId).filter(Boolean);
+  // 单分镜多候选视频：优先用后端返回的 videos 列表，兼容存量老数据（无 shot_videos 但有 video_path）
+  const candidatesOf = (s) => (s.videos && s.videos.length ? s.videos : (s.video_path ? [{ id: '__legacy__', video_path: s.video_path, selected: true, idx: 0, seed: s.seed }] : []));
+  const selectedOf = (s) => { const cs = candidatesOf(s); return cs.find((v) => v.selected) || cs[0] || null; };
 
   function RefThumb({ a, onReplace, onRemove }) {
     return (
@@ -70,20 +78,22 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
     );
   }
 
-  async function regen(shotId, render = true) {
+  async function regen(shotId, render = true, append = false) {
     const fb = (feedback[shotId] || '').trim();
+    setBusy(append ? '正在提交生成候选…' : '正在提交重新生成…');
     try {
-      await api.post('/api/projects/' + projectId + '/shots/' + shotId + '/regenerate', { feedback: fb || undefined, render });
-      toast.success(render ? '已提交重生成' : '已提交：仅 LLM 改写提示词，不渲染视频');
-      if (fb) setFeedback((f) => ({ ...f, [shotId]: '' })); // 反馈已被消费，清空以免下次重新生成又带上
+      await api.post('/api/projects/' + projectId + '/shots/' + shotId + '/regenerate', { feedback: fb || undefined, render, append });
+      toast.success(append ? '已提交生成候选' : (render ? '已提交重生成' : '已提交：仅 LLM 改写提示词，不渲染视频'));
+      if (fb) setFeedback((f) => ({ ...f, [shotId]: '' })); // 反馈已被消费，清空以免下次又带上
       load();
       onRefresh && onRefresh();
     } catch (e) { toast.error(e.message); }
+    finally { setBusy(null); }
   }
-  // 左侧反馈框有值 → 需要 LLM，弹窗确认；留空 → 直接渲染视频
-  function onRegen(shotId) {
+  // 左侧反馈框有值 → 需要 LLM，弹窗确认；留空 → 直接生成候选（追加，保留旧候选）
+  function onAddCandidate(shotId) {
     if ((feedback[shotId] || '').trim()) setAsk(shotId);
-    else regen(shotId, true);
+    else regen(shotId, true, true);
   }
   async function exportChapter() {
     setBusy('正在导出本章成片…');
@@ -142,22 +152,68 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
     if (p.mode === 'replace' && p.replaceAssetId) next = cur.map((id) => (id === p.replaceAssetId ? assetId : id));
     else next = cur.includes(assetId) ? cur : [...cur, assetId];
     setMaterialPicker(null);
+    setBusy('正在更新素材…');
     try {
       await api.patch('/api/projects/' + projectId + '/shots/' + p.shotId, { [field]: next });
       toast.success('素材已更新');
       load();
     } catch (e) { toast.error(e.message); }
+    finally { setBusy(null); }
   }
   async function removeMaterial(shotId, category, assetId) {
     const shot = shots.find((s) => s.id === shotId);
     const field = MATERIAL_FIELD[category];
     if (!shot || !field) return;
     const next = asArr(shot[field]).filter((id) => id !== assetId);
+    setBusy('正在移除素材…');
     try {
       await api.patch('/api/projects/' + projectId + '/shots/' + shotId, { [field]: next });
       toast.success('素材已移除');
       load();
     } catch (e) { toast.error(e.message); }
+    finally { setBusy(null); }
+  }
+  // 勾选某个候选视频作为「导出用」：写回 shots.video_path，后续导出成片/打包均取用选中项
+  async function selectVideo(shotId, videoId) {
+    setBusy('正在设置导出视频…');
+    try {
+      await api.post('/api/projects/' + projectId + '/shots/' + shotId + '/videos/' + videoId + '/select');
+      toast.success('已设为导出视频');
+      load();
+    } catch (e) { toast.error(e.message); }
+    finally { setBusy(null); }
+  }
+  // 保存手动修改后的视频提示词；regenerate=true 时保存后直接用该提示词追加生成候选（不经 LLM 改写）
+  async function savePrompt(shotId, value, regenerate) {
+    setBusy(regenerate ? '正在保存提示词并生成候选…' : '正在保存提示词…');
+    try {
+      await api.patch('/api/projects/' + projectId + '/shots/' + shotId, { video_prompt: value });
+      toast.success('提示词已保存');
+      setEditPrompt(null);
+      if (regenerate) {
+        await api.post('/api/projects/' + projectId + '/shots/' + shotId + '/regenerate', { render: true, append: true });
+        toast.success('已提交生成候选');
+        onRefresh && onRefresh();
+      }
+      load();
+    } catch (e) { toast.error(e.message); }
+    finally { setBusy(null); }
+  }
+  // 保存手动修改后的分镜时长（秒，1~15）
+  async function saveDuration(shotId, value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 1 || n > 15) {
+      toast.error('时长必须在 1~15 秒之间');
+      return;
+    }
+    setBusy('正在保存时长…');
+    try {
+      await api.patch('/api/projects/' + projectId + '/shots/' + shotId, { duration: n });
+      toast.success('时长已保存');
+      setEditDuration(null);
+      load();
+    } catch (e) { toast.error(e.message); }
+    finally { setBusy(null); }
   }
 
   if (loading) {
@@ -181,9 +237,10 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
       </div>
       {shown.map((s) => {
         const chars = charsOf(s), scenes = scenesOf(s), props = propsOf(s), costumes = costumesOf(s), ages = agesOf(s), audios = audiosOf(s);
-        // 语音参考只显示「有台词」角色（与后端 assembleShotReferences 一致）：多人同场时仅说话角色才有音色
+        // 语音参考只显示「有台词」角色（与后端 assembleShotReferences 一致，同走 nameMatches：
+        // 名字用规范化后精确相等，避免「明」被对白里的「小明」误判成说话人）
         const speakers = dialogueSpeakers(s.dialogue);
-        const speakingChars = chars.filter((c) => speakers.some((sp) => sp === c.name || sp.includes(c.name) || c.name.includes(sp)));
+        const speakingChars = chars.filter((c) => speakers.some((sp) => nameMatches(sp, c.name)));
         const voices = speakingChars.filter((c) => c.voice_ref).map((c) => ({ name: c.name, voice_ref: c.voice_ref }));
         const allRefs = [...chars, ...scenes, ...props, ...costumes, ...ages];
         const resoLabel = s.resolution === 'custom' && project
@@ -196,7 +253,31 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
                 <b>分镜 {s.idx}{s.chapter ? ' · ' + s.chapter : ''} · {s.scene_name || '未命名'}</b>
                 <Chip size="sm" variant="flat" color={statusColor(s.status)}>{s.status}</Chip>
               </div>
-              <div className="muted">时长 {s.duration}s · 分辨率 {resoLabel} · 比例 {s.aspect_ratio || '16:9'} · seed {s.seed || '-'}</div>
+              <div className="row" style={{ alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span className="muted">
+                  时长 {editDuration && editDuration.shotId === s.id ? (
+                    <input
+                      type="number"
+                      min={1}
+                      max={15}
+                      step={0.5}
+                      value={editDuration.value}
+                      onChange={(e) => setEditDuration({ shotId: s.id, value: e.target.value })}
+                      style={{ width: 56, display: 'inline-block' }}
+                    />
+                  ) : (s.duration ?? 5)}s
+                  · 分辨率 {resoLabel} · 比例 {s.aspect_ratio || '16:9'} · seed {s.seed || '-'}
+                </span>
+                {!running && !editDuration && (
+                  <Button size="sm" variant="light" className="h-6 min-w-0 px-1.5 text-[10px]" onPress={() => setEditDuration({ shotId: s.id, value: String(s.duration ?? 5) })}>编辑时长</Button>
+                )}
+                {editDuration && editDuration.shotId === s.id && (
+                  <>
+                    <Button size="sm" color="primary" className="h-6 min-w-0 px-1.5 text-[10px]" onPress={() => saveDuration(s.id, editDuration.value)}>保存</Button>
+                    <Button size="sm" variant="light" className="h-6 min-w-0 px-1.5 text-[10px]" onPress={() => setEditDuration(null)}>取消</Button>
+                  </>
+                )}
+              </div>
 
               <div style={{ marginTop: 8 }}>
                 <div className="row justify-between" style={{ alignItems: 'center', marginBottom: 4 }}>
@@ -253,21 +334,76 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
                   {s.sub_shots && <div><b>子镜头：</b><pre style={{ whiteSpace: 'pre-wrap' }}>{s.sub_shots}</pre></div>}
                 </div>
                 <div style={{ marginTop: 6 }}>
-                  <b>视频提示词：</b>
-                  <pre className="logbox" style={{ maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{s.video_prompt || '（未生成）'}</pre>
+                  <div className="row justify-between" style={{ alignItems: 'center', marginBottom: 4 }}>
+                    <b>视频提示词：</b>
+                    {!running && !editPrompt && (
+                      <Button size="sm" variant="flat" onPress={() => setEditPrompt({ shotId: s.id, value: s.video_prompt || '' })}>编辑</Button>
+                    )}
+                  </div>
+                  {editPrompt && editPrompt.shotId === s.id ? (
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <textarea
+                        className="logbox"
+                        style={{ minHeight: 160, width: '100%', padding: 8, whiteSpace: 'pre-wrap', resize: 'vertical' }}
+                        value={editPrompt.value}
+                        onChange={(e) => setEditPrompt({ shotId: s.id, value: e.target.value })}
+                      />
+                      <div className="row" style={{ gap: 6 }}>
+                        <Button size="sm" color="primary" onPress={() => savePrompt(s.id, editPrompt.value, true)}>保存并生成候选</Button>
+                        <Button size="sm" variant="flat" onPress={() => savePrompt(s.id, editPrompt.value, false)}>仅保存</Button>
+                        <Button size="sm" variant="light" onPress={() => setEditPrompt(null)}>取消</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <pre className="logbox" style={{ maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{s.video_prompt || '（未生成）'}</pre>
+                  )}
                 </div>
                 {s.prompt_id && <div className="muted">ComfyUI prompt_id: {s.prompt_id}</div>}
               </details>
 
-              {s.video_path && <video className="video" controls src={fileUrl(projectId, s.video_path)} />}
+              {(() => {
+                const vids = candidatesOf(s);
+                const sel = selectedOf(s);
+                const generating = s.status === 'generating' || s.status === 'running';
+                if (!vids.length && !generating) return null;
+                return (
+                  <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+                    {vids.length > 1 && (
+                      <div className="muted" style={{ fontSize: 12 }}>导出用候选视频（左上角勾选一条，默认第一条）</div>
+                    )}
+                    <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                      {vids.map((v, i) => {
+                        const isSel = sel && sel.id === v.id;
+                        return (
+                          <div key={v.id} style={{ position: 'relative', width: 210 }}>
+                            {vids.length > 1 && (
+                              <label style={{ position: 'absolute', top: 6, left: 6, zIndex: 2, maxWidth: 'calc(100% - 12px)', display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.55)', borderRadius: 6, padding: '2px 6px', cursor: running ? 'default' : 'pointer', overflow: 'hidden' }}>
+                                <input type="checkbox" checked={isSel} disabled={running} onChange={() => selectVideo(s.id, v.id)} style={{ flex: '0 0 auto' }} />
+                                <span style={{ fontSize: 11, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>候选 {i + 1}{v.seed ? ' · ' + v.seed : ''}</span>
+                              </label>
+                            )}
+                            <video className="video" controls src={fileUrl(projectId, v.video_path)} style={{ width: '100%', borderRadius: 8, outline: isSel ? '2px solid #006FEE' : 'none', outlineOffset: 2 }} />
+                          </div>
+                        );
+                      })}
+                      {generating && (
+                        <div style={{ width: 210, height: 120, border: '1px dashed #999', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#999', fontSize: 12 }}>
+                          <Spinner size="sm" />
+                          <span>候选视频生成中…</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               {s.error && <p className="m-0 text-danger">错误：{s.error}</p>}
               <div className="row" style={{ marginTop: 8 }}>
                 <Input size="sm" className="flex-1" placeholder="反馈（如：镜头拉近 / 让人物微笑），留空直接渲染；有内容会先问是否 LLM 改写" value={feedback[s.id] || ''} onChange={(e) => setFeedback({ ...feedback, [s.id]: e.target.value })} />
                 {(() => {
                   const job = activeJobFor(s.id);
                   return (
-                    <Button size="sm" isDisabled={!!job} onPress={() => onRegen(s.id)}>
-                      {job ? (job.status === 'queued' ? '⏳ 排队中' : '生成中…') : '↻ 重新生成'}
+                    <Button size="sm" isDisabled={!!job} onPress={() => onAddCandidate(s.id)}>
+                      {job ? (job.status === 'queued' ? '⏳ 排队中' : '生成中…') : '＋ 生成候选'}
                     </Button>
                   );
                 })()}
@@ -276,7 +412,9 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
           </Card>
         );
       })}
-      {!shots.length && <p className="muted">暂无分镜-请先生成素材</p>}
+      {/* 空态按**当前筛选后**的列表判断：按章节筛选时，其它章节有分镜也会让这里永远不显示提示，
+          用户看着「共 0 镜」却一句话都没有（旧写法判的是 shots.length） */}
+      {!shown.length && <p className="muted">暂无分镜-请先生成素材</p>}
 
       <Modal isOpen={!!preview} size="3xl" backdrop="blur" onClose={() => setPreview(null)}>
         <ModalContent>
@@ -296,11 +434,11 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
               <ModalHeader>检测到反馈，需要 LLM 改写提示词</ModalHeader>
               <ModalBody>
                 <p className="muted whitespace-pre-line">反馈：{ask ? feedback[ask] || '' : ''}</p>
-                <p>LLM 改写完成后，是否继续调用 ComfyUI 渲染视频？</p>
+                <p>LLM 改写完成后，是否继续生成候选视频（追加）？</p>
               </ModalBody>
               <ModalFooter>
-                <Button size="sm" color="primary" onPress={() => { const id = ask; setAsk(null); regen(id, true); }}>是 · LLM 后渲染视频</Button>
-                <Button size="sm" variant="flat" onPress={() => { const id = ask; setAsk(null); regen(id, false); }}>否 · 只做 LLM，不渲染</Button>
+                <Button size="sm" color="primary" onPress={() => { const id = ask; setAsk(null); regen(id, true, true); }}>是 · LLM 后生成候选</Button>
+                <Button size="sm" variant="flat" onPress={() => { const id = ask; setAsk(null); regen(id, false, true); }}>否 · 只做 LLM，不渲染</Button>
                 <Button size="sm" variant="light" onPress={() => setAsk(null)}>取消</Button>
               </ModalFooter>
             </>
@@ -316,6 +454,7 @@ export default function ShotsTab({ projectId, chapter: chapterProp = '', running
           mode={materialPicker.mode}
           replaceAssetId={materialPicker.replaceAssetId}
           assignedIds={asArr((shots.find((s) => s.id === materialPicker.shotId) || {})[MATERIAL_FIELD[materialPicker.category]])}
+          charIds={asArr((shots.find((s) => s.id === materialPicker.shotId) || {}).character_ids)}
           onPick={applyMaterial}
           onCancel={() => setMaterialPicker(null)}
         />
