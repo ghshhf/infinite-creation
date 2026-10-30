@@ -95,9 +95,18 @@ async function main() {
   }
   console.log('\n索引已写入 ' + path.relative(ROOT, INDEX_FILE) + '（共 ' + index.skills.length + ' 项）');
 
-  // 推送到远端之后才谈得上刷新 CDN；先刷上一次推送的路径，未推送时刷了也无害。
+  // purge 只有在内容已经推到远端之后才有意义：CDN 被清后会立刻回源，
+  // 若此时 GitHub 上还是旧内容，回源就把旧内容又填回去。所以发布流程是
+  // 「build → commit/push → 再跑一次 --purge-only」。--no-purge 可整段跳过。
+  if (args.includes('--purge-only')) {
+    const names = index.skills.map((s) => s.name);
+    await purgeCdn(['/skills-registry.json', ...names.map((n) => '/dist-skills/' + n + '.zip')].map((p) => JSD_PATH + p));
+    return;
+  }
   if (!args.includes('--no-purge')) {
     await purgeCdn(['/skills-registry.json', ...published.map((p) => '/dist-skills/' + p.name + '.zip')].map((p) => JSD_PATH + p));
+    console.log('\n提醒：purge 在 push 之前执行通常无效（CDN 回源拿到的还是旧内容）。');
+    console.log('      正确顺序：build → commit/push → node scripts/build-registry.mjs --purge-only');
   }
 }
 
